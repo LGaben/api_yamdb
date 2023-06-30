@@ -19,10 +19,10 @@ USER_ROLES = [
 
 class CustomUser(AbstractUser):
     username = models.CharField(verbose_name='Пользователь',
-                                max_length=150,
+                                max_length=20,
                                 unique=True,
                                 help_text=(
-                                    'Не больше 150 символов.'
+                                    'Не больше 20 символов.'
                                     'Только буквы, цифры и @/./+/-/_'),
                                 validators=[USERNAMEVALIDATOR],
                                 error_messages={
@@ -42,12 +42,13 @@ class CustomUser(AbstractUser):
     bio = models.TextField(verbose_name='О себе',
                            blank=True)
     role = models.CharField(verbose_name='Права пользователя',
+                            max_length=150,
                             choices=USER_ROLES,
                             default='user')
     confirmation_code = models.SlugField(blank=True)
 
     def __str__(self):
-        return self.username[:150]
+        return self.username[:20]
 
     @property
     def is_user(self):
