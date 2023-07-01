@@ -73,7 +73,7 @@ class Title(models.Model):
         'Category',
         related_name='Слаг',
         verbose_name='Категория произведения',
-        on_delete=models.SET_NULL, null=True
+        on_delete=models.SET_NULL
     )
 
     class Meta:
