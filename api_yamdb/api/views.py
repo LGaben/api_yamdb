@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from rest_framework import filters
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
@@ -15,9 +14,6 @@ from .serializers import (CategorySerializer,
                          SignUpSerializer,
                          TokenSerializer,)
 from .mixins import ListCreateDeleteViewSet
-
-
-User = get_user_model()
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
