@@ -1,11 +1,18 @@
+from rest_framework import filters
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework. filters import SearchFilter, OrderingFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from reviews.models import Category, Title, Genre
-from .serializers import CategorySerializer, TitleSerializer, GenreSerializer
+from users.models import User
+from .serializers import (CategorySerializer,
+                         TitleSerializer,
+                         GenreSerializer,
+                         UserSerializer,
+                         SignUpSerializer,
+                         TokenSerializer,)
 from .mixins import ListCreateDeleteViewSet
 
 
@@ -39,3 +46,23 @@ class TitleViewSet(ModelViewSet):
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
     ordering_fields = ('category', 'genre', 'name', 'year')
+
+
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = UserSerializer
+    filter_backends = (filters.SearchFilter)
+    search_fields = ('=user__username')
+
+
+
+class SignUpViewSet(ModelViewSet):
+    permission_classes = (AllowAny,)
+    pass
+
+
+
+class TokenViewSet(ModelViewSet):
+    permission_classes = (AllowAny,)
+    pass

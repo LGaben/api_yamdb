@@ -1,9 +1,13 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Category, Title, Genre
 from users.models import User
+
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -35,7 +39,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
-    username = serializers.CharField(read_only=True, max_length=150)
+    username = serializers.CharField(read_only=True, max_length=20)
     email = serializers.EmailField(read_only=True, max_length=254)
     role = serializers.CharField(read_only=True)
 
@@ -51,7 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
-    username = serializers.CharField(read_only=True, max_length=150)
+    username = serializers.CharField(read_only=True, max_length=20)
     email = serializers.EmailField(read_only=True, max_length=254)
 
     class Meta:
@@ -62,7 +66,6 @@ class SignUpSerializer(serializers.ModelSerializer):
             'username': {'required': True},
             'email': {'required': True},
         }
-        model = User
         validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
@@ -77,7 +80,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.ModelSerializer):
     """Сериализатор для входа пользователя."""
-    username = serializers.CharField(required=True, max_length=150)
+    username = serializers.CharField(required=True, max_length=20)
     confirmation_code = serializers.SlugField(required=True)
     extra_kwargs = {
         'username': {'required': True},
