@@ -1,13 +1,10 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.generics import get_object_or_404
 
-from reviews.models import Category, Title, Genre
+from reviews.models import Category, Title, Genre, Review, Comment
 from users.models import User
-
-
-User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -85,3 +82,45 @@ class TokenSerializer(serializers.ModelSerializer):
     extra_kwargs = {
         'username': {'required': True},
         'confirmation_code': {'required': True}}
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+
+    def validate(self, data):
+        request = self.context['request']
+        title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if request.method == 'POST':
+            if Review.objects.filter(
+                    title=title, author=request.user).exists():
+                raise ValidationError('Можно оставлять только один'
+                                      'отзыв на произведение.')
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True
+    )
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Comment
+        fields = '__all__'
