@@ -1,8 +1,13 @@
-from rest_framework import filters, viewsets
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from rest_framework import filters, viewsets, status, views
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from reviews.models import Category, Title, Genre, Review
@@ -15,6 +20,7 @@ from .serializers import (CategorySerializer,
                          TokenSerializer,
                          ReviewSerializer,
                          CommentSerializer)
+from .utils import Util
 from .mixins import ListCreateDeleteViewSet
 from .permissions import IsAdminOrReadOnly
 
@@ -57,17 +63,48 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter)
     search_fields = ('=user__username')
+    
+    @action(detail=False, methods=['get', 'patch'],
+            permission_classes=(IsAuthenticated),
+            serializer_class=UserSerializer,
+            pagination_class=None)
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(
+            request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
-class SignUpViewSet(ModelViewSet):
+class SignUpViewSet(views.APIView):
     permission_classes = (AllowAny,)
-    pass
 
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user_data = serializer.data
+        user = User.objects.get(email=user_data['email'])
+        token = RefreshToken.for_user(user).access_token
+        current_site = get_current_site(request).domain
+        relativeLink = reverse('email-verify')
+        absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
+        email_body = 'Привет'+user.username + \
+            'Перейди по ссылке ниже для подтверждения электронного адреса почты \n' + absurl
+        data = {'email_body': email_body, 'to_email': user.email,
+                'email_subject': 'Verify your email'}
+        Util.send_email(data)
+        return Response(user_data, status=status.HTTP_201_CREATED)
 
 
 class TokenViewSet(ModelViewSet):
+    serializer_class = TokenSerializer
     permission_classes = (AllowAny,)
+
+
     pass
 
 

@@ -1,9 +1,7 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-User = get_user_model
 
 USERNAMEVALIDATOR = UnicodeUsernameValidator()
 
@@ -17,7 +15,7 @@ USER_ROLES = [
     (ADMIN, 'admin')]
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     username = models.CharField(verbose_name='Пользователь',
                                 max_length=20,
                                 unique=True,
