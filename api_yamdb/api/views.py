@@ -34,7 +34,6 @@ from .serializers import (
     CommentSerializer,
     TitleNotSafeMetodSerialaizer
 )
-from .utils import Util
 from .mixins import ListCreateDeleteViewSet
 from .permissions import IsAdminOrReadOnly, IsAdmin
 
@@ -91,7 +90,7 @@ class UserViewSet(ModelViewSet):
     permission_classes = (IsAdmin,)
     serializer_class = UserSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
-    filter_backends = (filters.SearchFilter)
+    filter_backends = (SearchFilter)
     search_fields = ('=user__username')
 
     @action(detail=False, methods=['get', 'patch'],
