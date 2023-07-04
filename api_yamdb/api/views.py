@@ -1,50 +1,69 @@
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
-from rest_framework import filters, viewsets, status, views
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import action
+from rest_framework import viewsets, status, views
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly,
+    AllowAny,
+    IsAuthenticated
+)
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import SearchFilter
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Title, Genre, Review
 from users.models import User
-from .serializers import (CategorySerializer,
-                         TitleSerializer,
-                         GenreSerializer,
-                         UserSerializer,
-                         SignUpSerializer,
-                         TokenSerializer,
-                         ReviewSerializer,
-                         CommentSerializer)
+
+from .serializers import (
+    CategorySerializer,
+    TitleSerializer,
+    GenreSerializer,
+    UserSerializer,
+    SignUpSerializer,
+    TokenSerializer,
+    ReviewSerializer,
+    CommentSerializer
+)
 from .utils import Util
 from .mixins import ListCreateDeleteViewSet
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAdmin
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
     """ВьюСет для котегорий."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
+    def destroy(self, request, *args, **kwargs):
+        category = get_object_or_404(Category, slug=kwargs['pk'])
+        category.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class GenreViewSet(ListCreateDeleteViewSet):
     """ВьюСет для жанров."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+
+    def destroy(self, request, *args, **kwargs):
+        genre = get_object_or_404(Genre, slug=kwargs['pk'])
+        genre.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TitleViewSet(ModelViewSet):
@@ -61,9 +80,9 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = UserSerializer
-    filter_backends = (filters.SearchFilter)
+    filter_backends = (SearchFilter)
     search_fields = ('=user__username')
-    
+
     @action(detail=False, methods=['get', 'patch'],
             permission_classes=(IsAuthenticated),
             serializer_class=UserSerializer,
@@ -91,9 +110,12 @@ class SignUpViewSet(views.APIView):
         token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(request).domain
         relativeLink = reverse('email-verify')
-        absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
-        email_body = 'Привет'+user.username + \
-            'Перейди по ссылке ниже для подтверждения электронного адреса почты \n' + absurl
+        absurl = (
+            'http://' + current_site + relativeLink + "?token=" + str(token)
+        )
+        email_body = (
+            'Привет' + user.username + 'Перейди по ссылке ниже для'
+            ' подтверждения электронного адреса почты \n' + absurl)
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Verify your email'}
         Util.send_email(data)
@@ -103,8 +125,6 @@ class SignUpViewSet(views.APIView):
 class TokenViewSet(ModelViewSet):
     serializer_class = TokenSerializer
     permission_classes = (AllowAny,)
-
-
     pass
 
 
