@@ -4,7 +4,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Title, Genre, Review, Comment
-from users.models import User
+from users.models import CustomUser
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -26,8 +26,8 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    genre = GenreSerializer(many=True, required=True, read_only=True)
-    category = CategorySerializer(required=True, read_only=True)
+    genre = GenreSerializer(many=True, required=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -41,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
     role = serializers.CharField(read_only=True)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('username',
                   'email',
                   'first_name',
@@ -56,7 +56,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True, max_length=254)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('username',
                   'email')
         extra_kwargs = {
@@ -65,7 +65,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         }
         validators = [
             UniqueTogetherValidator(
-                queryset=User.objects.all(),
+                queryset=CustomUser.objects.all(),
                 fields=('username', 'email')
             )
         ]

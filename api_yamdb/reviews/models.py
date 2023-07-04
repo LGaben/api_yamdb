@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import User
+from users.models import CustomUser
 from datetime import datetime
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -61,20 +61,21 @@ class Title(models.Model):
         ),
         blank=True
     )
-    description = models.CharField(
-        max_length=1000,
-        verbose_name='Описание',
+    category = models.ForeignKey(
+        'Category',
+        related_name='Слаг',
+        verbose_name='Категория произведения',
+        on_delete=models.SET_NULL,
+        null=True
     )
     genre = models.ManyToManyField(
         'Genre',
         related_name='Слаг',
         verbose_name='Жанры произведения',
     )
-    category = models.ForeignKey(
-        'Category',
-        related_name='Слаг',
-        verbose_name='Категория произведения',
-        on_delete=models.SET_NULL
+    description = models.CharField(
+        max_length=1000,
+        verbose_name='Описание',
     )
 
     class Meta:
@@ -86,7 +87,7 @@ class Title(models.Model):
 
 class Feedback(models.Model):
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='%(class)s',
     )
@@ -126,7 +127,7 @@ class Review(Feedback):
         verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
-                fields=('title', 'author'),
+                fields=('author', 'title'),
                 name='unique_review'
             ),
         ]
