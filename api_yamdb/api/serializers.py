@@ -26,8 +26,8 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    genre = GenreSerializer(many=True, required=True, read_only=True)
-    category = CategorySerializer(required=True, read_only=True)
+    genre = GenreSerializer(many=True, required=True)
+    category = CategorySerializer(required=True)
 
     class Meta:
         fields = '__all__'

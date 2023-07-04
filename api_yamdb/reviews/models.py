@@ -74,7 +74,8 @@ class Title(models.Model):
         'Category',
         related_name='Слаг',
         verbose_name='Категория произведения',
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        null = True,
     )
 
     class Meta:
@@ -88,7 +89,7 @@ class Feedback(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='%(class)s',
+
     )
     text = models.TextField(
         max_length=500,
