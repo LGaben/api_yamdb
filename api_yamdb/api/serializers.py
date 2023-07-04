@@ -27,7 +27,7 @@ class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
     genre = GenreSerializer(many=True, required=True)
-    category = CategorySerializer(required=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -36,6 +36,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
+
     username = serializers.CharField(read_only=True, max_length=20)
     email = serializers.EmailField(read_only=True, max_length=254)
     role = serializers.CharField(read_only=True)
@@ -52,6 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
+
     username = serializers.CharField(read_only=True, max_length=20)
     email = serializers.EmailField(read_only=True, max_length=254)
 
@@ -69,6 +71,7 @@ class SignUpSerializer(serializers.ModelSerializer):
                 fields=('username', 'email')
             )
         ]
+
     def validate_username(self, username):
         if username == 'me':
             raise ValidationError(f'Логин {username} недоступен')
@@ -77,6 +80,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для входа пользователя."""
+
     username = serializers.CharField(required=True, max_length=20)
     confirmation_code = serializers.CharField(required=True)
     extra_kwargs = {
