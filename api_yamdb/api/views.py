@@ -31,7 +31,8 @@ from .serializers import (
     SignUpSerializer,
     TokenSerializer,
     ReviewSerializer,
-    CommentSerializer
+    CommentSerializer,
+    TitleNotSafeMetodSerialaizer
 )
 from .utils import Util
 from .mixins import ListCreateDeleteViewSet
@@ -78,6 +79,11 @@ class TitleViewSet(ModelViewSet):
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
     ordering_fields = ('category', 'genre', 'name', 'year')
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH', 'DELETE'):
+            return TitleNotSafeMetodSerialaizer
+        return TitleSerializer
 
 
 class UserViewSet(ModelViewSet):
