@@ -4,7 +4,6 @@ from django.core.mail import send_mail
 
 from rest_framework import filters, viewsets, status, views
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
@@ -106,25 +105,23 @@ class SignUpViewSet(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TokenViewSet(TokenObtainPairView):
+class TokenViewSet(views.APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User, username=request.data.get('username')
-            )
-            if not default_token_generator.check_token(
-                user, request.data.get('confirmation_code')
-            ):
-                return Response(
-                    'Неверный confirmation_code',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            token = {'token': str(AccessToken.for_user(user))}
-            return Response(token, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        confirmation_code = serializer.validated_data.get('confirmation_code')
+        username = serializer.validated_data.get('username')
+        user = get_object_or_404(User, username=username)
+        if user and confirmation_code == user.confirmation_code:
+            user.is_active = True
+            user.save()
+            token = AccessToken.for_user(user)
+            return Response({'Ваш токен': f'{token}'},
+                            status=status.HTTP_200_OK)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
