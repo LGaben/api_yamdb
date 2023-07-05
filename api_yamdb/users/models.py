@@ -16,10 +16,10 @@ USER_ROLES = [
 
 class User(AbstractUser):
     username = models.CharField(verbose_name='Пользователь',
-                                max_length=20,
+                                max_length=150,
                                 unique=True,
                                 help_text=(
-                                    'Не больше 20 символов.'
+                                    'Не больше 150 символов.'
                                     'Только буквы, цифры и @/./+/-/_'),
                                 validators=[USERNAMEVALIDATOR],
                                 error_messages={
@@ -46,7 +46,7 @@ class User(AbstractUser):
     password = False
 
     def __str__(self):
-        return self.username[:20]
+        return self.username[:150]
 
     @property
     def is_moderator(self):

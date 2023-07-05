@@ -2,11 +2,12 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
 from rest_framework import viewsets, status, views, filters
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     AllowAny,
@@ -88,23 +89,30 @@ class UserViewSet(ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = (SearchFilter)
     search_fields = ('=user__username')
+    pagination_class = PageNumberPagination
 
-    @action(detail=False, methods=['get', 'patch'],
-            permission_classes=(IsAuthenticated),
-            pagination_class=None)
-    def me(self, request):
-        if request.method == 'GET':
-            serializer = self.get_serializer(request.user)
-            return Response(data=serializer.data)
-        if request.method == 'PATCH':
-            serializer = self.get_serializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=request.user.role)
-            return Response(data=serializer.data)
+    @action(
+        methods=['GET', 'PATCH'], detail=False, url_path='me',
+        permission_classes=(IsAuthenticated,)
+    )
+    def get_update_me(self, request):
+        serializer = self.get_serializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        if serializer.is_valid():
+            if self.request.method == 'PATCH':
+                serializer.validated_data.pop('role', None)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class SignUpViewSet(views.APIView):
@@ -120,31 +128,32 @@ class SignUpViewSet(views.APIView):
             send_mail(
                 'Код подтверждения',
                 f'Ваш код подтверждения : {confirmation_code}',
-                settings.EMAIL_HOST_USER,
-                [request.data.get('email')],
+                settings.ADMIN_EMAIL,
+                (user.email,),
                 fail_silently=False,
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TokenViewSet(views.APIView):
+class TokenView(TokenObtainPairView):
     permission_classes = (AllowAny,)
-
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        confirmation_code = serializer.validated_data.get('confirmation_code')
-        username = serializer.validated_data.get('username')
-        user = get_object_or_404(User, username=username)
-        if user and confirmation_code == user.confirmation_code:
-            user.is_active = True
-            user.save()
-            token = AccessToken.for_user(user)
-            return Response({'Ваш токен': f'{token}'},
-                            status=status.HTTP_200_OK)
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid():
+            user = get_object_or_404(
+                User, username=request.data.get('username')
+            )
+            if not default_token_generator.check_token(
+                user, request.data.get('confirmation_code')
+            ):
+                return Response(
+                    'Неверный confirmation_code',
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            token = {'token': str(AccessToken.for_user(user))}
+            return Response(token, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

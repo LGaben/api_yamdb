@@ -63,7 +63,7 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
 
-    username = serializers.CharField(read_only=True, max_length=20)
+    username = serializers.CharField(read_only=True, max_length=150)
     email = serializers.EmailField(read_only=True, max_length=254)
     role = serializers.CharField(read_only=True)
 
@@ -75,12 +75,15 @@ class UserSerializer(serializers.ModelSerializer):
                   'last_name',
                   'bio',
                   'role')
-
+        def validate_email_length(self, email):
+                if len(email) > 254:
+                    raise ValidationError(f'Длина почтового адреса должна быть не больше 254 символов')
+                return email
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-    username = serializers.CharField(required=True, max_length=20)
+    username = serializers.CharField(required=True, max_length=150)
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
@@ -102,12 +105,16 @@ class SignUpSerializer(serializers.ModelSerializer):
         if username == 'me':
             raise ValidationError(f'Логин {username} недоступен')
         return username
+    def validate_email_length(self, email):
+        if len(email) > 254:
+            raise ValidationError(f'Длина почтового адреса должна быть не больше 254 символов')
+        return email
 
 
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для входа пользователя."""
 
-    username = serializers.CharField(required=True, max_length=20)
+    username = serializers.CharField(required=True, max_length=150)
     confirmation_code = serializers.CharField(required=True)
     extra_kwargs = {
         'username': {'required': True},
