@@ -54,8 +54,8 @@ class UserSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-    username = serializers.CharField(read_only=True, max_length=20)
-    email = serializers.EmailField(read_only=True, max_length=254)
+    username = serializers.CharField(required=True, max_length=20)
+    email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         model = User
@@ -78,11 +78,11 @@ class SignUpSerializer(serializers.ModelSerializer):
         return username
 
 
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(serializers.Serializer):
     """Сериализатор для входа пользователя."""
 
     username = serializers.CharField(required=True, max_length=20)
-    confirmation_code = serializers.SlugField(required=True)
+    confirmation_code = serializers.CharField(required=True)
     extra_kwargs = {
         'username': {'required': True},
         'confirmation_code': {'required': True}}
