@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
-from rest_framework import viewsets, status, views, filters
+from rest_framework import viewsets, status, views
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
@@ -15,8 +15,9 @@ from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 
-
+from reviews.filters import TitleFilterSet
 from reviews.models import Category, Title, Genre, Review
 from users.models import User
 from .serializers import (
@@ -36,9 +37,9 @@ from .permissions import IsAdminOrReadOnly, IsAdmin
 class CategoryViewSet(ListCreateDeleteViewSet):
     """ВьюСет для котегорий."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
@@ -68,11 +69,13 @@ class GenreViewSet(ListCreateDeleteViewSet):
 class TitleViewSet(ModelViewSet):
     """ВьюСет для произведений."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
-    ordering_fields = ('category', 'genre', 'name', 'year')
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilterSet
 
 
 class UserViewSet(ModelViewSet):
