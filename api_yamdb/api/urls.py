@@ -35,3 +35,4 @@ urlpatterns = [
     path('v1/auth/signup/', SignUpViewSet.as_view(), name='signup'),
     path('v1/auth/token/', TokenViewSet.as_view(), name='get_token'), 
 ]
+

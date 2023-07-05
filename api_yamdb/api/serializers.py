@@ -80,8 +80,8 @@ class UserSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-    username = serializers.CharField(read_only=True, max_length=20)
-    email = serializers.EmailField(read_only=True, max_length=254)
+    username = serializers.CharField(required=True, max_length=20)
+    email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         model = User
