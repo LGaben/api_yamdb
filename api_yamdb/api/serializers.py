@@ -34,6 +34,32 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
 
+class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
+    """Сеализатор для создания, удаления и изменения произведения."""
+
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        many=True,
+        queryset=Genre.objects.all(),
+    )
+    category = CategorySerializer(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+        read_only_fields = ('genre', 'category', )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Title.objects.all(),
+                fields=('name', 'year', 'category',)
+            )
+        ]
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
 
