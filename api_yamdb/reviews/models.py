@@ -50,7 +50,6 @@ class Title(models.Model):
     name = models.CharField(
         max_length=100,
         verbose_name='Категоря',
-        unique=True,
         blank=True
     )
     year = models.PositiveSmallIntegerField(
@@ -76,6 +75,7 @@ class Title(models.Model):
     description = models.CharField(
         max_length=1000,
         verbose_name='Описание',
+        null=True
     )
 
     class Meta:
