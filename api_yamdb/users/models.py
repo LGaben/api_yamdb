@@ -45,6 +45,8 @@ class User(AbstractUser):
     confirmation_code = models.SlugField(blank=True)
     password = False
 
+    
+
     def __str__(self):
         return self.username[:150]
 
