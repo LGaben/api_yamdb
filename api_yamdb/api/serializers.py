@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Title, Genre, Review, Comment
@@ -11,7 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
     """Сериализотор для категорий."""
 
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Category
 
 
@@ -19,7 +19,7 @@ class GenreSerializer(serializers.ModelSerializer):
     """Сериализоватор для жанров."""
 
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Genre
 
 
@@ -27,7 +27,7 @@ class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
     genre = GenreSerializer(many=True, required=True)
-    category = CategorySerializer(read_only=True)
+    category = CategorySerializer(required=True)
 
     class Meta:
         fields = '__all__'
@@ -42,15 +42,15 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
         many=True,
         queryset=Genre.objects.all(),
     )
-    category = CategorySerializer(
-        read_only=True,
-        default=serializers.CurrentUserDefault()
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+        required=True,
     )
 
     class Meta:
         model = Title
         fields = '__all__'
-        read_only_fields = ('genre', 'category', )
 
         validators = [
             UniqueTogetherValidator(
