@@ -141,3 +141,5 @@ EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_HOST_USER = 'django_test@yandex.ru'
 EMAIL_HOST_PASSWORD = 'djangotest1'
 EMAIL_PORT = 587
+
+ADMIN_EMAIL = 'admin@yandex.ru'
