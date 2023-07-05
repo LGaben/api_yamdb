@@ -63,9 +63,7 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
 
-    username = serializers.CharField(read_only=True, max_length=20)
-    email = serializers.EmailField(read_only=True, max_length=254)
-    role = serializers.CharField(read_only=True)
+    role = serializers.ReadOnlyField(read_only=True)
 
     class Meta:
         model = User
@@ -80,7 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-    username = serializers.CharField(required=True, max_length=20)
+    username = serializers.CharField(required=True, max_length=150)
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
@@ -98,17 +96,12 @@ class SignUpSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def validate_username(self, username):
-        if username == 'me':
-            raise ValidationError(f'Логин {username} недоступен')
-        return username
-
 
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для входа пользователя."""
 
-    username = serializers.CharField(required=True, max_length=20)
-    confirmation_code = serializers.CharField(required=True)
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=256)
     extra_kwargs = {
         'username': {'required': True},
         'confirmation_code': {'required': True}}

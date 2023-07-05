@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import AccessToken
@@ -6,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status, views
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     AllowAny,
@@ -29,8 +28,7 @@ from .serializers import (
     SignUpSerializer,
     TokenSerializer,
     ReviewSerializer,
-    CommentSerializer,
-    TitleNotSafeMetodSerialaizer
+    CommentSerializer
 )
 from .mixins import ListCreateDeleteViewSet
 from .permissions import IsAdminOrReadOnly, IsAdmin
@@ -79,36 +77,36 @@ class TitleViewSet(ModelViewSet):
     filterset_fields = ('category', 'genre', 'name', 'year')
     filterset_class = TitleFilterSet
 
-    def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH', 'DELETE'):
-            return TitleNotSafeMetodSerialaizer
-        return TitleSerializer
-
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     permission_classes = (IsAdmin,)
     serializer_class = UserSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    filter_backends = (SearchFilter)
+    filter_backends = (filters.SearchFilter)
     search_fields = ('=user__username')
+    http_method_names = ['get', 'post', 'head', 'options', 'patch', 'delete']
 
-    @action(detail=False, methods=['get', 'patch'],
-            permission_classes=(IsAuthenticated),
-            pagination_class=None)
-    def me(self, request):
-        if request.method == 'GET':
-            serializer = self.get_serializer(request.user)
-            return Response(data=serializer.data)
-        if request.method == 'PATCH':
-            serializer = self.get_serializer(
+@action(methods=['GET', 'PATCH'], detail=False, url_path='me',
+        permission_classes=(IsAuthenticated,)
+        )
+def get_update_me(self, request):
+    if request.method =='PATCH':
+        if request.user.is_admin or request.user.is_superuser:
+            serializer = UserSerializer(
                 request.user,
                 data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=request.user.role)
-            return Response(data=serializer.data)
+                partial=True)
+        else:
+            serializer = UserSerializer(
+                request.user,
+                data=request.data,
+                partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    serializer = UserSerializer(request.user, data=request.data, partial=True)
+    serializer.is_valid(raise_exception=True)
+    return Response(serializer.data)
 
 
 class SignUpViewSet(views.APIView):
@@ -116,20 +114,16 @@ class SignUpViewSet(views.APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            user = User.objects.get(username=request.data.get('username'),
-                                    email=request.data.get('email')
-                                    )
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                'Код подтверждения',
-                f'Ваш код подтверждения : {confirmation_code}',
-                settings.EMAIL_HOST_USER,
-                [request.data.get('email')],
-                fail_silently=False,
+        serializer.is_valid(raise_exception=True)
+        user, _ = User.objects.get_or_create(**serializer._validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject= 'Код подтверждения',
+            message= f'Ваш код подтверждения : {confirmation_code}',
+            from_email=None,    
+            recipient_list=[user.email]
             )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenViewSet(views.APIView):
