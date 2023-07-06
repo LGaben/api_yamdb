@@ -1,4 +1,3 @@
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -88,6 +87,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username',
                   'email')
+
     def validate_exist(self, attrs): 
         username = attrs.get('username') 
         if_user = User.objects.filter(username=username) 
@@ -104,14 +104,6 @@ class TokenSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=256)
-
-    def validate(self, data):
-        user = get_object_or_404(User, username=data['username'])
-        if not default_token_generator.check_token(user,
-                                                   data['confirmation_code']):
-            raise serializers.ValidationError(
-                {'confirmation_code': 'Неверный код подтверждения'})
-        return data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
