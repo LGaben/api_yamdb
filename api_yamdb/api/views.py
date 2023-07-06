@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import AccessToken
@@ -5,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status, views
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     AllowAny,
@@ -28,7 +29,8 @@ from .serializers import (
     SignUpSerializer,
     TokenSerializer,
     ReviewSerializer,
-    CommentSerializer
+    CommentSerializer,
+    TitleNotSafeMetodSerialaizer
 )
 from .mixins import ListCreateDeleteViewSet
 from .permissions import IsAdminOrReadOnly, IsAdmin
@@ -77,12 +79,17 @@ class TitleViewSet(ModelViewSet):
     filterset_fields = ('category', 'genre', 'name', 'year')
     filterset_class = TitleFilterSet
 
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH', 'DELETE'):
+            return TitleNotSafeMetodSerialaizer
+        return TitleSerializer
+
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     permission_classes = (IsAdmin,)
     serializer_class = UserSerializer
-    filter_backends = (filters.SearchFilter)
+    filter_backends = (SearchFilter)
     search_fields = ('=user__username')
     http_method_names = ['get', 'post', 'head', 'options', 'patch', 'delete']
 
@@ -90,7 +97,7 @@ class UserViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
         )
 def get_update_me(self, request):
-    if request.method =='PATCH':
+    if request.method == 'PATCH':
         if request.user.is_admin or request.user.is_superuser:
             serializer = UserSerializer(
                 request.user,
