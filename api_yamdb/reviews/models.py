@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import User
 from datetime import datetime
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -49,7 +50,6 @@ class Title(models.Model):
     name = models.CharField(
         max_length=100,
         verbose_name='Категоря',
-        unique=True,
         blank=True
     )
     year = models.PositiveSmallIntegerField(
@@ -60,24 +60,89 @@ class Title(models.Model):
         ),
         blank=True
     )
-    description = models.CharField(
-        max_length=1000,
-        verbose_name='Описание',
+    category = models.ForeignKey(
+        'Category',
+        related_name='Слаг',
+        verbose_name='Категория произведения',
+        on_delete=models.SET_NULL,
+        null=True
     )
     genre = models.ManyToManyField(
         'Genre',
         related_name='Слаг',
         verbose_name='Жанры произведения',
     )
-    category = models.ForeignKey(
-        'Category',
-        related_name='Слаг',
-        verbose_name='Категория произведения',
-        on_delete=models.SET_NULL,
+    description = models.CharField(
+        max_length=1000,
+        verbose_name='Описание',
+        null=True
     )
 
     class Meta:
         ordering = ('-year',)
 
     def __str__(self):
-        return self.name
+        return self.name[:50]
+
+
+class Feedback(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+
+    )
+    text = models.TextField(
+        max_length=500,
+        verbose_name='Текст отзыва',
+        help_text='Введите текст отзыва'
+    )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ['pub_date']
+
+    def __str__(self):
+        return self.text[:50]
+
+
+class Review(Feedback):
+    title = models.ForeignKey(
+        Title,
+        verbose_name='Произведение',
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    score = models.PositiveSmallIntegerField(
+        verbose_name='Оценка',
+        validators=(MinValueValidator(1, 'Оценка должна быть от 1 до 10'),
+                    MaxValueValidator(10, 'Оценка должна быть от 1 до 10'))
+    )
+
+    class Meta(Feedback.Meta):
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('author', 'title'),
+                name='unique_review'
+            ),
+        ]
+
+
+class Comment(Feedback):
+    review = models.ForeignKey(
+        Review,
+        verbose_name='Комментарии',
+        on_delete=models.CASCADE,
+        related_name='comments',
+        blank=True,
+        null=True
+    )
+
+    class Meta(Feedback.Meta):
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
