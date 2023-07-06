@@ -34,16 +34,42 @@ for name_table, dict_file in dict_bd.items():
     count = ','.join('?' * len(items))
     print(count)
     if name_table == 'users_user':
-        cur.executemany(f'INSERT INTO {name_table} (id, username, email, role, bio, first_name, last_name) VALUES ({count})', rows)
+        cur.executemany(
+            (
+                f'INSERT INTO {name_table} '
+                '(id, username, email, role, bio, first_name, last_name) '
+                'VALUES ({count})'
+            ),
+            rows
+        )
         cur.execute(f'SELECT * FROM {name_table}')
     elif name_table == 'reviews_review':
-        cur.executemany(f'INSERT INTO {name_table} (id, title_id, text, author_id, score, pub_date) VALUES ({count})', rows)
+        cur.executemany(
+            (
+                f'INSERT INTO {name_table} '
+                '(id, title_id, text, author_id, score, pub_date) '
+                'VALUES ({count})'
+            ),
+            rows
+        )
         cur.execute(f'SELECT * FROM {name_table}')
     elif name_table == 'reviews_title':
-        cur.executemany(f'INSERT INTO {name_table} (id, name, year, category_id) VALUES ({count})', rows)
+        cur.executemany(
+            (
+                f'INSERT INTO {name_table} '
+                '(id, name, year, category_id) VALUES ({count})'
+            ),
+            rows
+        )
         cur.execute(f'SELECT * FROM {name_table}')
     elif name_table == 'reviews_comment':
-        cur.executemany(f'INSERT INTO {name_table} (id, review_id, text, author_id, pub_date) VALUES ({count})', rows)
+        cur.executemany(
+            (
+                f'INSERT INTO {name_table} '
+                '(id, review_id, text, author_id, pub_date) VALUES ({count})'
+            ),
+            rows
+        )
         cur.execute(f'SELECT * FROM {name_table}')
     else:
         cur.executemany(f'INSERT INTO {name_table} VALUES ({count})', rows)
