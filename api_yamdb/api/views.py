@@ -33,7 +33,7 @@ from .serializers import (
     TitleNotSafeMetodSerialaizer
 )
 from .mixins import ListCreateDeleteViewSet
-from .permissions import IsAdminOrReadOnly, IsAdmin, AdminOrAuthPermission
+from .permissions import IsAdminOrReadOnly, IsAdmin, AdminOrAuthPermission, IsOwnerAdminModeratorOrReadOnly
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
@@ -124,11 +124,11 @@ class SignUpViewSet(views.APIView):
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
-            subject='Код подтверждения',
-            message=f'Ваш код подтверждения : {confirmation_code}',
-            from_email=None,
+            subject= 'Код подтверждения',
+            message= f'Ваш код подтверждения : {confirmation_code}',
+            from_email=None,    
             recipient_list=[user.email]
-        )
+            )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

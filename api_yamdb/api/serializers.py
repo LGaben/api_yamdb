@@ -58,10 +58,6 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
 
-    username = serializers.CharField(read_only=True, max_length=150)
-    email = serializers.EmailField(read_only=True, max_length=254)
-    role = serializers.CharField(read_only=True)
-
     class Meta:
         model = User
         fields = ('username',
@@ -71,26 +67,29 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
 
-    def validate_email_length(self, email):
-                if len(email) > 254:
-                    raise ValidationError(f'Длина почтового адреса должна быть не больше 254 символов')
-                return email
-
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-
     username = serializers.CharField(required=True, max_length=150,
                                      validators=[validate_username, UnicodeUsernameValidator()]
                                      )
-
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         model = User
         fields = ('username',
                   'email')
+
+    def validate_exist(self, attrs): 
+        username = attrs.get('username') 
+        if_user = User.objects.filter(username=username) 
+        if if_user.exists(): 
+            raise ValidationError('Пользователь с таким именем уже существует') 
+        email = attrs.get('email') 
+        if_email = User.objects.filter(email=email) 
+        if if_email.exists(): 
+            raise ValidationError('Почта уже использовалась') 
 
 
 class TokenSerializer(serializers.Serializer):
