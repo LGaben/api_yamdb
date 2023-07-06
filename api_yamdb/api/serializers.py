@@ -1,3 +1,4 @@
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
@@ -5,6 +6,7 @@ from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Title, Genre, Review, Comment
 from users.models import User
+from .validators import validate_username
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -72,34 +74,17 @@ class UserSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-    username = serializers.CharField(required=True, max_length=150)
+
+    username = serializers.CharField(required=True, max_length=150,
+                                     validators=[validate_username, UnicodeUsernameValidator()]
+                                     )
+
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         model = User
         fields = ('username',
                   'email')
-        extra_kwargs = {
-            'username': {'required': True},
-            'email': {'required': True},
-        }
-
-    def validate_exist(self, attrs):
-        username = attrs.get('username')
-        if_user = User.objects.filter(username=username)
-        if if_user.exists():
-            raise ValidationError('Пользователь с таким именем уже существует')
-        email = attrs.get('email')
-        if_email = User.objects.filter(email=email)
-        if if_email.exists():
-            raise ValidationError('Почта уже использовалась')
-
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя "me" не разрешено.'
-            )
-        return value
 
 
 class TokenSerializer(serializers.Serializer):
@@ -107,9 +92,6 @@ class TokenSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=256)
-    extra_kwargs = {
-        'username': {'required': True},
-        'confirmation_code': {'required': True}}
 
 
 class ReviewSerializer(serializers.ModelSerializer):

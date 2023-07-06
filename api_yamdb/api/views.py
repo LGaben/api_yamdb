@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status, views
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     AllowAny,
@@ -34,8 +34,7 @@ from .serializers import (
     TitleNotSafeMetodSerialaizer
 )
 from .mixins import ListCreateDeleteViewSet
-from .permissions import (IsAdminOrReadOnly, IsAdmin,
-                          IsOwnerAdminModeratorOrReadOnly)
+from .permissions import IsAdminOrReadOnly, IsAdmin, AdminOrAuthPermission
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
@@ -89,33 +88,32 @@ class TitleViewSet(ModelViewSet):
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = (IsAdmin,)
+    permission_classes = (AdminOrAuthPermission,)
     serializer_class = UserSerializer
-    filter_backends = (SearchFilter)
-    search_fields = ('=user__username')
-    http_method_names = ['get', 'post', 'head', 'options', 'patch', 'delete']
+    lookup_field = 'username'
 
-@action(methods=['GET', 'PATCH'], detail=False, url_path='me',
+    @action(
+        methods=['GET', 'PATCH'], detail=False, url_path='me',
         permission_classes=(IsAuthenticated,)
+    )
+    def get_update_me(self, request):
+        serializer = self.get_serializer(
+            request.user,
+            data=request.data,
+            partial=True
         )
-def get_update_me(self, request):
-    if request.method == 'PATCH':
-        if request.user.is_admin or request.user.is_superuser:
-            serializer = UserSerializer(
-                request.user,
-                data=request.data,
-                partial=True)
-        else:
-            serializer = UserSerializer(
-                request.user,
-                data=request.data,
-                partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    serializer = UserSerializer(request.user, data=request.data, partial=True)
-    serializer.is_valid(raise_exception=True)
-    return Response(serializer.data)
+        if serializer.is_valid():
+            if self.request.method == 'PATCH':
+                serializer.validated_data.pop('role', None)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class SignUpViewSet(views.APIView):
@@ -124,7 +122,7 @@ class SignUpViewSet(views.APIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, _ = User.objects.get_or_create(**serializer._validated_data)
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject= 'Код подтверждения',
