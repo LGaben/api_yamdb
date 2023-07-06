@@ -30,6 +30,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True, required=True)
     category = CategorySerializer(required=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -54,16 +55,11 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Title.objects.all(),
-                fields=('name', 'year', 'category',)
-            )
-        ]
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
+
+    role = serializers.ReadOnlyField(read_only=True)
 
     class Meta:
         model = User
@@ -78,9 +74,11 @@ class UserSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
+
     username = serializers.CharField(required=True, max_length=150,
                                      validators=[validate_username, UnicodeUsernameValidator()]
                                      )
+
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
@@ -124,10 +122,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True
-    )
+    
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
