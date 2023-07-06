@@ -1,12 +1,14 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db import IntegrityError
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
 from rest_framework import viewsets, status, views
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     AllowAny,
@@ -16,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import serializers
 
 from reviews.filters import TitleFilterSet
 from reviews.models import Category, Title, Genre, Review
@@ -33,7 +35,12 @@ from .serializers import (
     TitleNotSafeMetodSerialaizer
 )
 from .mixins import ListCreateDeleteViewSet
-from .permissions import IsAdminOrReadOnly, IsAdmin, AdminOrAuthPermission, IsOwnerAdminModeratorOrReadOnly
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAdmin,
+    AdminOrAuthPermission,
+    IsOwnerAdminModeratorOrReadOnly
+)
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
@@ -89,7 +96,10 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     permission_classes = (AdminOrAuthPermission,)
     serializer_class = UserSerializer
+    filter_backends = (SearchFilter,)
     lookup_field = 'username'
+    search_fields = ('username',)
+    pagination_class = LimitOffsetPagination
 
     @action(
         methods=['GET', 'PATCH'], detail=False, url_path='me',
@@ -109,6 +119,7 @@ class UserViewSet(ModelViewSet):
         return Response(
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -121,14 +132,22 @@ class SignUpViewSet(views.APIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        try:
+            user, created = User.objects.get_or_create(
+                username=username,
+                email=email
+            )
+        except IntegrityError:
+            raise serializers.ValidationError('Пользователь существует')
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
-            subject= 'Код подтверждения',
-            message= f'Ваш код подтверждения : {confirmation_code}',
-            from_email=None,    
-            recipient_list=[user.email]
-            )
+            'Код подтверждения',
+            f'Ваш код подтверждения : {confirmation_code}',
+            'asd@yamdb.fake',
+            [user.email]
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -145,10 +164,14 @@ class TokenViewSet(views.APIView):
             user.is_active = True
             user.save()
             token = AccessToken.for_user(user)
-            return Response({'Ваш токен': f'{token}'},
-                            status=status.HTTP_200_OK)
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'Ваш токен': f'{token}'},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

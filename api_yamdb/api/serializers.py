@@ -71,25 +71,32 @@ class UserSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
 
-    username = serializers.CharField(required=True, max_length=150,
-                                     validators=[validate_username, UnicodeUsernameValidator()]
-                                     )
+    username = serializers.CharField(
+        required=True, max_length=150,
+        validators=[validate_username, UnicodeUsernameValidator()]
+    )
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         model = User
-        fields = ('username',
-                  'email')
+        fields = (
+            'username',
+            'email'
+        )
 
-    def validate_exist(self, attrs): 
-        username = attrs.get('username') 
-        if_user = User.objects.filter(username=username) 
-        if if_user.exists(): 
-            raise ValidationError('Пользователь с таким именем уже существует') 
-        email = attrs.get('email') 
-        if_email = User.objects.filter(email=email) 
-        if if_email.exists(): 
-            raise ValidationError('Почта уже использовалась') 
+    def validate_username(self, value):
+        if value == User.objects.filter(username=value):
+            raise serializers.ValidationError(
+                'Пользователь с таким именем уже существует'
+            )
+        return value
+
+    def validate_email(self, value):
+        if value == User.objects.filter(email=value):
+            raise serializers.ValidationError(
+                'Почта уже использовалась'
+            )
+        return value
 
 
 class TokenSerializer(serializers.Serializer):
@@ -120,9 +127,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
             if Review.objects.filter(
-                    title=title, author=request.user).exists():
-                raise ValidationError('Можно оставлять только один'
-                                      'отзыв на произведение.')
+                title=title,
+                author=request.user
+            ).exists():
+                raise ValidationError(
+                    'Можно оставлять только один отзыв на произведение.'
+                )
         return data
 
 

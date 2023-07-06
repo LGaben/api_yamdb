@@ -118,8 +118,10 @@ class Review(Feedback):
     )
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
-        validators=(MinValueValidator(1, 'Оценка должна быть от 1 до 10'),
-                    MaxValueValidator(10, 'Оценка должна быть от 1 до 10'))
+        validators=(
+            MinValueValidator(1, 'Оценка должна быть от 1 до 10'),
+            MaxValueValidator(10, 'Оценка должна быть от 1 до 10')
+        )
     )
 
     class Meta(Feedback.Meta):

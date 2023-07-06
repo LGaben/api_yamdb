@@ -3,7 +3,7 @@ from django.core.validators import RegexValidator
 
 
 def validate_username(username: str):
-    if username =='me':
+    if username == 'me':
         raise ValidationError('Нельзя использователь имя пользователя "me" ')
     regex_validator = RegexValidator(
         regex=r'[\w.@+-]+\Z',
