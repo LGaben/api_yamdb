@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Title, Genre, Review, Comment
@@ -52,13 +52,6 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Title.objects.all(),
-                fields=('name', 'year', 'category',)
-            )
-        ]
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
@@ -89,12 +82,23 @@ class SignUpSerializer(serializers.ModelSerializer):
             'username': {'required': True},
             'email': {'required': True},
         }
-        validators = [
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=('username', 'email')
+
+    def validate_exist(self, attrs):
+        username = attrs.get('username')
+        if_user = User.objects.filter(username=username)
+        if if_user.exists():
+            raise ValidationError('Пользователь с таким именем уже существует')
+        email = attrs.get('email')
+        if_email = User.objects.filter(email=email)
+        if if_email.exists():
+            raise ValidationError('Почта уже использовалась')
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя "me" не разрешено.'
             )
-        ]
+        return value
 
 
 class TokenSerializer(serializers.Serializer):
@@ -135,10 +139,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True
-    )
+    
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
