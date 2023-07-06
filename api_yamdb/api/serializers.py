@@ -1,7 +1,6 @@
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Title, Genre, Review, Comment
@@ -59,7 +58,9 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
 
-    role = serializers.ReadOnlyField(read_only=True)
+    username = serializers.CharField(read_only=True, max_length=150)
+    email = serializers.EmailField(read_only=True, max_length=254)
+    role = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -69,6 +70,11 @@ class UserSerializer(serializers.ModelSerializer):
                   'last_name',
                   'bio',
                   'role')
+
+    def validate_email_length(self, email):
+                if len(email) > 254:
+                    raise ValidationError(f'Длина почтового адреса должна быть не больше 254 символов')
+                return email
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -122,7 +128,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True

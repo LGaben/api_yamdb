@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -125,11 +124,11 @@ class SignUpViewSet(views.APIView):
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
-            subject= 'Код подтверждения',
-            message= f'Ваш код подтверждения : {confirmation_code}',
-            from_email=None,    
+            subject='Код подтверждения',
+            message=f'Ваш код подтверждения : {confirmation_code}',
+            from_email=None,
             recipient_list=[user.email]
-            )
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
