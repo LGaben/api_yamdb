@@ -11,7 +11,7 @@ FILE = {
     'users_user': 'users',
     'reviews_title': 'titles',
     'reviews_title_genre': 'genre_title',
-    'reviews_comment': 'comments'
+    'reviews_comment': 'comments',
 }
 dict_bd = {}
 for bd_table, name_file in FILE.items():
