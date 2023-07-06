@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-USERNAMEVALIDATOR = UnicodeUsernameValidator()
+from api.validators import validate_username
+
 
 USER = 'user'
 MODERATOR = 'moderator'
@@ -21,7 +22,7 @@ class User(AbstractUser):
                                 help_text=(
                                     'Не больше 150 символов.'
                                     'Только буквы, цифры и @/./+/-/_'),
-                                validators=[USERNAMEVALIDATOR],
+                                validators=[validate_username, UnicodeUsernameValidator()],
                                 error_messages={
                                     'unique': ('Пользователь с'
                                                'таким именем уже существует')}
