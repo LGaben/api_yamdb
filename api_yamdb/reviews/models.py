@@ -136,9 +136,7 @@ class Comment(Feedback):
         Review,
         verbose_name='Комментарии',
         on_delete=models.CASCADE,
-        related_name='comments',
-        blank=True, 
-        null=True
+        related_name='comments'
     )
 
     class Meta(Feedback.Meta):
