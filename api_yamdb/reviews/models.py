@@ -137,7 +137,7 @@ class Comment(Feedback):
         verbose_name='Комментарии',
         on_delete=models.CASCADE,
         related_name='comments',
-        blank=True, 
+        blank=True,
         null=True
     )
 
