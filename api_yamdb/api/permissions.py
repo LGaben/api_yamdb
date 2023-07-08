@@ -1,29 +1,7 @@
 from rest_framework import permissions
 
 
-class IsAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_admin or request.user.is_superuser
-        )
-
-
-class IsOwnerAdminModeratorOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
-    message = 'Изменить контент может только автор, админ или модератор.'
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_admin
-            or request.user.is_moderator
-            or request.user == obj.author
-        )
-
-
-class IsAdminOrReadOnly(permissions.BasePermission):
-    message = 'Изменить контент может только админ.'
-
+class IsAdminOrOnlyRead(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
@@ -31,7 +9,25 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         )
 
 
-class AdminOrAuthPermission(permissions.BasePermission):
+class IsOwnerAdminModeratorOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
+    message = 'Изменить контент может только автор.'
+
+    def has_object_permission(self, request, view, obj): 
+        return ( 
+            request.method in permissions.SAFE_METHODS 
+            or request.user.is_admin 
+            or request.user.is_moderator 
+            or request.user == obj.author)
+
+
+class IsModerator(permissions.IsAuthenticatedOrReadOnly):
+    message = 'Изменить контент может только админ или модератор.'
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_moderator
+
+
+class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_admin
