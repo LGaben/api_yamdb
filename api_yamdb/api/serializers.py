@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -5,7 +6,7 @@ from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Title, Genre, Review, Comment
 from users.models import User
-from .validators import validate_username
+from users.validators import validate_username
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -54,6 +55,13 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
+    def validate_year(self, value):
+        if value == datetime.now().year:
+            raise serializers.ValidationError(
+                'Почта уже использовалась'
+            )
+        return value
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
@@ -68,7 +76,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'role')
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.Serializer):
     """Сериализатор для регистрации пользователя."""
 
     username = serializers.CharField(
@@ -77,33 +85,29 @@ class SignUpSerializer(serializers.ModelSerializer):
     )
     email = serializers.EmailField(required=True, max_length=254)
 
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email'
-        )
-
-    def validate_username(self, value):
-        if value == User.objects.filter(username=value):
-            raise serializers.ValidationError(
-                'Пользователь с таким именем уже существует'
-            )
-        return value
-
-    def validate_email(self, value):
-        if value == User.objects.filter(email=value):
-            raise serializers.ValidationError(
-                'Почта уже использовалась'
-            )
-        return value
-
 
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для входа пользователя."""
 
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=256)
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    """Сериализатор запрещает изменять роли."""
+
+    role = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):

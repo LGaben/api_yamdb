@@ -1,22 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from api.validators import validate_username
-
-
-USER = 'user'
-MODERATOR = 'moderator'
-ADMIN = 'admin'
-
-USER_ROLES = [
-    (USER, 'user'),
-    (MODERATOR, 'moderator'),
-    (ADMIN, 'admin')
-]
+from .validators import validate_username
 
 
 class User(AbstractUser):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
+
+    USER_ROLES = [
+        (USER, 'user'),
+        (MODERATOR, 'moderator'),
+        (ADMIN, 'admin')
+    ]
     username = models.CharField(
         verbose_name='Пользователь',
         max_length=150,
@@ -25,15 +22,17 @@ class User(AbstractUser):
             'Не больше 150 символов.'
             'Только буквы, цифры и @/./+/-/_'
         ),
-        validators=[validate_username, UnicodeUsernameValidator()],
+        validators=[validate_username],
         error_messages={
-            'unique': ('Пользователь с таким именем уже существует')
+            'unique': (
+                'Пользователь с таким именем или'
+                ' с таким емейлом уже существует'
+            )
         }
     )
     email = models.EmailField(
         verbose_name='email',
         max_length=254,
-        blank=False,
         unique=True
     )
     role = models.CharField(
@@ -56,16 +55,14 @@ class User(AbstractUser):
         max_length=150,
         blank=True
     )
-    confirmation_code = models.SlugField(blank=True)
-    password = False
 
     def __str__(self):
-        return self.username[:150]
+        return self.username
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == self.MODERATOR
 
     @property
     def is_admin(self):
-        return self.is_staff or self.role == ADMIN
+        return self.is_staff or self.role == self.ADMIN

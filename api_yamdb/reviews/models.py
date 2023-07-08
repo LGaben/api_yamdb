@@ -1,14 +1,14 @@
 from django.db import models
-from users.models import User
-from datetime import datetime
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+from users.models import User
 
 
 class Category(models.Model):
     """Модель категории (типы) произведений."""
 
     name = models.CharField(
-        max_length=100,
+        max_length=256,
         verbose_name='Категоря',
         unique=True
     )
@@ -28,7 +28,7 @@ class Genre(models.Model):
     """Модель категории жанров."""
 
     name = models.CharField(
-        max_length=100,
+        max_length=256,
         verbose_name='Жанр',
         unique=True
     )
@@ -48,16 +48,12 @@ class Title(models.Model):
     """Модель произведения, к которым пишут отзывы."""
 
     name = models.CharField(
-        max_length=100,
+        max_length=256,
         verbose_name='Категоря',
         blank=True
     )
     year = models.PositiveSmallIntegerField(
         verbose_name='Дата выхода произведения',
-        validators=(
-            MinValueValidator(0),
-            MaxValueValidator(datetime.now().year),
-        ),
         blank=True
     )
     category = models.ForeignKey(
@@ -103,7 +99,7 @@ class Feedback(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['pub_date']
+        ordering = ['-pub_date']
 
     def __str__(self):
         return self.text[:50]
@@ -141,7 +137,7 @@ class Comment(Feedback):
         verbose_name='Комментарии',
         on_delete=models.CASCADE,
         related_name='comments',
-        blank=True,
+        blank=True, 
         null=True
     )
 
