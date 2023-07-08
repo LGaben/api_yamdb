@@ -39,8 +39,7 @@ from .serializers import (
 )
 from .mixins import ListCreateDeleteViewSet
 from .permissions import (
-    IsOwner,
-    IsModerator,
+    IsOwnerAdminModeratorOrReadOnly,
     IsAdminOrOnlyRead,
     IsAdmin
 )
@@ -100,7 +99,7 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=['GET', 'PATCH'], detail=False, url_path='me',
         permission_classes=(IsAuthenticated,)
-        )
+    )
     def get_update_me(self, request):
         user = get_object_or_404(User, username=self.request.user)
         if request.method == 'GET':
@@ -157,7 +156,7 @@ class TokenViewSet(views.APIView):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly | IsAdmin | IsModerator | IsOwner]
+    permission_classes = (IsOwnerAdminModeratorOrReadOnly,)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -173,7 +172,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly | IsAdmin | IsModerator | IsOwner]
+    permission_classes = (IsOwnerAdminModeratorOrReadOnly,)
 
     def get_review(self):
         title_id = self.kwargs.get('title_id')
