@@ -99,7 +99,7 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=['GET', 'PATCH'], detail=False, url_path='me',
         permission_classes=(IsAuthenticated,)
-        )
+    )
     def get_update_me(self, request):
         user = get_object_or_404(User, username=self.request.user)
         if request.method == 'GET':
