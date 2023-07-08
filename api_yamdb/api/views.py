@@ -39,7 +39,8 @@ from .serializers import (
 )
 from .mixins import ListCreateDeleteViewSet
 from .permissions import (
-    IsOwnerAdminModeratorOrReadOnly,
+    IsOwner,
+    IsModerator,
     IsAdminOrOnlyRead,
     IsAdmin
 )
@@ -156,7 +157,7 @@ class TokenViewSet(views.APIView):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsOwnerAdminModeratorOrReadOnly,)
+    permission_classes = [IsAuthenticatedOrReadOnly | IsAdmin | IsModerator | IsOwner]
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -172,7 +173,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsOwnerAdminModeratorOrReadOnly,)
+    permission_classes = [IsAuthenticatedOrReadOnly | IsAdmin | IsModerator | IsOwner]
 
     def get_review(self):
         title_id = self.kwargs.get('title_id')
