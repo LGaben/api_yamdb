@@ -33,25 +33,25 @@ git clone git@github.com:LGaben/api_yamdb.git
 ```
 
 ```
-cd api_final_yatube
+cd api_yamdb
 ```
 
 Cоздать и активировать виртуальное окружение:
 
 ```
-python -m venv env
+python -m venv venv
 ```
 
 * Если у вас Linux/macOS
 
     ```
-    source env/bin/activate
+    source venv/bin/activate
     ```
 
 * Если у вас windows
 
     ```
-    source env/scripts/activate
+    source venv/scripts/activate
     ```
 
 ```
