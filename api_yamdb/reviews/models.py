@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from .validators import validate_year
 from users.models import User
 
 
@@ -54,7 +55,8 @@ class Title(models.Model):
     )
     year = models.PositiveSmallIntegerField(
         verbose_name='Дата выхода произведения',
-        blank=True
+        blank=True,
+        validators=[validate_year],
     )
     category = models.ForeignKey(
         'Category',

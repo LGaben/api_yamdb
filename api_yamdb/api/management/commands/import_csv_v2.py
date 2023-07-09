@@ -1,17 +1,17 @@
 import csv
+
+from django.conf import settings
 from pathlib import Path
 from django.core.management.base import BaseCommand
 
 from reviews.models import Category, Title, Genre, Review, Comment
 from users.models import User
 
-DIR_PATCH = Path.cwd()
-
 
 def import_data_category():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'category.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'category.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:
@@ -27,7 +27,7 @@ def import_data_category():
 def import_data_genre():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'genre.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'genre.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:
@@ -43,7 +43,7 @@ def import_data_genre():
 def import_data_review():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'review.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'review.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:
@@ -62,7 +62,7 @@ def import_data_review():
 def import_data_users():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'users.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'users.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:
@@ -82,7 +82,7 @@ def import_data_users():
 def import_data_comments():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'comments.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'comments.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:
@@ -100,7 +100,7 @@ def import_data_comments():
 def import_data_title():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'titles.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'titles.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:
@@ -117,7 +117,7 @@ def import_data_title():
 def import_data_genre_title():
 
     with open(
-        Path(DIR_PATCH, 'static', 'data', 'genre_title.csv'),
+        Path(settings.BASE_DIR, 'static', 'data', 'genre_title.csv'),
         encoding='utf-8',
         newline=''
     ) as csvfile:

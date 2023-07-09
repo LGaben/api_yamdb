@@ -27,37 +27,59 @@
 
 ## **Установка проекта**
  - [ ] Клонируйте репозиторий и перейдите в него в командной строке:
+
 ```
-git clone git@github.com:GodAlexK/api_final_yatube.git
+git clone git@github.com:LGaben/api_yamdb.git
 ```
+
 ```
 cd api_final_yatube
 ```
- - [ ] Создайте и активируйте виртуальное окружение
+
+Cоздать и активировать виртуальное окружение:
+
 ```
-python -m venv venv
+python -m venv env
 ```
+
+* Если у вас Linux/macOS
+
+    ```
+    source env/bin/activate
+    ```
+
+* Если у вас windows
+
+    ```
+    source env/scripts/activate
+    ```
+
 ```
-source venv/Scripts/activate
+python -m pip install --upgrade pip
 ```
- - [ ] Установите зависимости из файла requirements.txt:
+
+Установить зависимости из файла requirements.txt:
+
 ```
 pip install -r requirements.txt
 ```
- - [ ] В папке с файлом manage.py выполните миграции:
+
+Выполнить миграции:
+
 ```
 python manage.py migrate
 ```
- - [ ] Запустите сервер:
- ```
-python manage.py runserver
+Запустить скрипт для заполнения БД:
+
 ```
-## **Документация к API**
-- После запуска сервера документация доступна по адресу
-```
-http://127.0.0.1:8000/redoc/
+python manage.py import_csv_v2
 ```
 
+Запустить проект:
+
+```
+python manage.py runserver
+```
 
 ## **Авторы**
 -Филин Иван, Сухарев Никита, Коренков Алексей

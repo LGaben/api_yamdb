@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class IsAdminOrOnlyRead(permissions.BasePermission):
+class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
@@ -17,11 +17,13 @@ class IsOwner(permissions.IsAuthenticatedOrReadOnly):
             request.user.is_authenticated
             and request.user == obj.author)
 
+
 class ReadOnly(permissions.BasePermission):
     message = 'Изменить контент может только админ или модератор.'
 
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
+
 
 class IsModerator(permissions.BasePermission):
     message = 'Изменить контент может только админ или модератор.'

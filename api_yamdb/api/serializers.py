@@ -1,4 +1,3 @@
-from datetime import datetime
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -54,13 +53,6 @@ class TitleNotSafeMetodSerialaizer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-
-    def validate_year(self, value):
-        if value == datetime.now().year:
-            raise serializers.ValidationError(
-                'Почта уже использовалась'
-            )
-        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
