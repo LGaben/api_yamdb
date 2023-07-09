@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import serializers
 from rest_framework import permissions
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 from .filters import TitleFilterSet
 from reviews.models import Category, Title, Genre, Review
@@ -41,7 +41,7 @@ from .mixins import ListCreateDeleteViewSet
 from .permissions import (
     IsOwner,
     IsModerator,
-    IsAdminOrOnlyRead,
+    IsAdminOrReadOnly,
     IsAdmin,
     ReadOnly
 )
@@ -52,7 +52,7 @@ class CategoryViewSet(ListCreateDeleteViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrOnlyRead,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
@@ -62,7 +62,7 @@ class CategoryViewSet(ListCreateDeleteViewSet):
 class GenreViewSet(ListCreateDeleteViewSet):
     """ВьюСет для жанров."""
 
-    permission_classes = (IsAdminOrOnlyRead,)
+    permission_classes = (IsAdminOrReadOnly,)
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
@@ -74,7 +74,7 @@ class GenreViewSet(ListCreateDeleteViewSet):
 class TitleViewSet(ModelViewSet):
     """ВьюСет для произведений."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrOnlyRead,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminOrReadOnly,)
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
@@ -103,15 +103,14 @@ class UserViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def get_update_me(self, request):
-        user = get_object_or_404(User, username=self.request.user)
+        user = self.request.user
         if request.method == 'GET':
             serializer = RoleSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'PATCH':
-            serializer = RoleSerializer(user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = RoleSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SignUpView(views.APIView):
@@ -148,12 +147,16 @@ class TokenViewSet(views.APIView):
         confirmation_code = serializer.validated_data.get('confirmation_code')
         username = serializer.validated_data.get('username')
         user = get_object_or_404(User, username=username)
-        if not default_token_generator.check_token(user, confirmation_code):
-            return Response({'Неверный код'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        token = RefreshToken.for_user(user)
-        return Response({'token': token.access_token},
-                        status=status.HTTP_200_OK)
+        if default_token_generator.check_token(user, confirmation_code):
+            token = AccessToken.for_user(user)
+            return Response(
+                data={'token': str(token)},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            'Неверный код подтверждения или имя пользователя!',
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
